@@ -98,3 +98,36 @@ def train_val_test_split(X, y, train_frac=0.7, val_frac=0.15, test_frac=0.15, sh
     y_test = y[idx_test]
 
     return X_train, y_train, X_val, y_val, X_test, y_test
+
+
+def softmax(z: np.ndarray) -> np.ndarray:
+    """
+    Row-wise softmax.
+    z : (batch_size, n_classes)
+    returns : (batch_size, n_classes)
+    """
+    z_shift = z - np.max(z, axis=1, keepdims=True)
+    exp_z = np.exp(z_shift)
+    return exp_z / np.sum(exp_z, axis=1, keepdims=True)
+
+
+def cross_entropy_loss(probs: np.ndarray, y_true: np.ndarray) -> float:
+    """
+    Averaged cross-entropy loss for one-hot labels.
+    probs  : (batch_size, n_classes)  –– softmax probabilities
+    y_true : (batch_size, n_classes)  –– one-hot ground truth
+    """
+    m = y_true.shape[0]
+    log_lik = np.log(probs + 1e-8)        # avoid log(0)
+    return -np.sum(y_true * log_lik) / m
+
+
+def softmax_ce_gradient(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+    """
+    Gradient of CE loss w.r.t. the logits before softmax.
+    probs  : (batch_size, n_classes)
+    y_true : (batch_size, n_classes)
+    returns: (batch_size, n_classes)
+    """
+    m = y_true.shape[0]
+    return (probs - y_true) / m
