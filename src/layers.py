@@ -7,26 +7,23 @@ class Dense:
         output_dim: number of neurons in this layer
         activation: 'relu', 'sigmoid', or 'linear'
         """
-        self.input_dim = input_dim
+        self.input_dim  = input_dim
         self.output_dim = output_dim
         self.activation = activation
 
-        # ← CHANGE HERE: He initialization for ReLU layers
-        # If using ReLU, scale by sqrt(2/input_dim). If linear/sigmoid, use small stddev.
-        if activation == 'relu':
-            self.W = np.random.randn(input_dim, output_dim) * np.sqrt(2.0 / input_dim)
-        else:
-            # for 'linear' or 'sigmoid', a small Gaussian still works
-            self.W = np.random.randn(input_dim, output_dim) * 0.01
+        # He-init for ReLU-like activations, Xavier for linear / sigmoid
+        fan_in = input_dim
+        if activation == "relu":
+            scale = np.sqrt(2.0 / fan_in)
+        else:                                    # linear, sigmoid, etc.
+            scale = np.sqrt(1.0 / fan_in)
 
-        # Biases start at zero
-        self.b = np.zeros((1, output_dim))
+        self.W = np.random.randn(input_dim, output_dim).astype(np.float32) * scale
+        self.b = np.zeros((1, output_dim), dtype=np.float32)
 
-        self.input = None
-        self.z = None
-        self.output = None
-        self.dW = None
-        self.db = None
+        # will be filled during forward/backward
+        self.input = self.z = self.output = None
+        self.dW = self.db = None
 
     def forward(self, x):
         self.input = x

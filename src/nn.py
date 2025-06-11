@@ -1,7 +1,6 @@
 import numpy as np
-from sklearn.datasets import fetch_openml
 from src.layers import Dense
-from src.utils import softmax, cross_entropy_loss, softmax_ce_gradient
+from src.utils import softmax, cross_entropy_loss, softmax_ce_gradient, one_hot_encode
 
 class NeuralNetwork:
     def __init__(self, layer_sizes):
@@ -76,23 +75,74 @@ class NeuralNetwork:
                 layer.b -= lr * layer.db
 
 
-    def train(self, X, y, epochs=10, lr=0.01, verbose=True):
-        for epoch in range(1, epochs + 1):
-            # Forward
-            logits = self.forward(X)                # shape = (N,10)
+    def train(
+            self,
+            X, y,
+            epochs: int = 30,
+            lr: float = 0.1,
+            batch_size: int = 128,
+            shuffle: bool = True,
+            verbose: bool = True,
+            *,
+            X_val=None,
+            y_val=None,
+            patience: int = 5,
+            min_delta: float = 1e-3,
+        ):
+            n_samples = X.shape[0]
+            best_val_loss = np.inf
+            epochs_bad    = 0
+            # 👉 store best weights so we can roll back
+            best_weights = [(layer.W.copy(), layer.b.copy()) for layer in self.layers]
 
-            # Loss + gradient w.r.t. logits 
-            loss, dlogits = self.compute_loss(logits, y)
+            for epoch in range(1, epochs + 1):
+                if shuffle:
+                    perm = np.random.permutation(n_samples)
+                    X, y = X[perm], y[perm]
 
-            # Backward
-            self.backward(dlogits)
+                # mini-batch SGD
+                for i in range(0, n_samples, batch_size):
+                    xb, yb = X[i : i + batch_size], y[i : i + batch_size]
+                    logits     = self.forward(xb)
+                    loss, dlog = self.compute_loss(logits, yb)
+                    self.backward(dlog)
+                    self.update_params(lr)
 
-            self.update_params(lr)
+                # ---- metrics ----------------------------------------------------
+                logits_tr = self.forward(X)
+                train_acc = (np.argmax(logits_tr, axis=1) == y).mean()
 
-            if verbose and (epoch % max(1, epochs // 10) == 0):
-                preds = np.argmax(logits, axis=1)        # shape (N,)
-                acc = np.mean(preds == y)
-                print(f"Epoch {epoch}/{epochs}  —  loss: {loss:.4f}  —  acc: {acc:.3f}")
+                if X_val is not None:
+                    logits_val = self.forward(X_val)
+                    probs_val  = softmax(logits_val)
+                    val_loss   = cross_entropy_loss(probs_val, one_hot_encode(y_val, 10))
+                    val_acc    = (np.argmax(logits_val, axis=1) == y_val).mean()
+
+                    if verbose:
+                        print(f"Epoch {epoch}/{epochs} "
+                            f"— train_acc {train_acc:.3f} "
+                            f"— val_loss {val_loss:.4f} "
+                            f"— val_acc {val_acc:.3f}")
+
+                    # ---- EARLY-STOP CHECK --------------------------------------
+                    if best_val_loss - val_loss > min_delta:
+                        best_val_loss = val_loss
+                        epochs_bad    = 0
+                        best_weights  = [(l.W.copy(), l.b.copy()) for l in self.layers]
+                    else:
+                        epochs_bad += 1
+                        if epochs_bad >= patience:
+                            print(f"\n⏹️  Early stopping at epoch {epoch} "
+                                f"(no val loss drop >{min_delta} for {patience} epochs)")
+                            # restore best
+                            for (W_best, b_best), layer in zip(best_weights, self.layers):
+                                layer.W[:] = W_best
+                                layer.b[:] = b_best
+                            break
+                else:
+                    # no validation set provided
+                    if verbose:
+                        print(f"Epoch {epoch}/{epochs} — train_acc {train_acc:.3f}")
 
 
     def predict(self, X):
