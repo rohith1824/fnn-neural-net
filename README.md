@@ -39,9 +39,9 @@ A lightweight, from-scratch implementation of a feedforward neural network using
 
 1. **Parameter Initialization**  
    - **Xavier** (linear/sigmoid):  
-     $$W \sim \mathcal{N}\bigl(0,\,\tfrac{1}{\text{fan\_in}}\bigr)$$
+     $$W \sim \mathcal{N}\bigl(0,\,\tfrac{1}{\text{fan_in}}\bigr)$$
    - **He** (ReLU):  
-     $$W \sim \mathcal{N}\bigl(0,\,\tfrac{2}{\text{fan\_in}}\bigr)$$
+     $$W \sim \mathcal{N}\bigl(0,\,\tfrac{2}{\text{fan_in}}\bigr)$$
 
 2. **Forward Pass**  
    - **Linear**: $Z^{[l]} = A^{[l-1]} W^{[l]} + b^{[l]}$
