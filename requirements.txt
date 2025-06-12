@@ -1,1 +1,4 @@
-numpy==2.2.6
+numpy>=1.20         # core numerical computing
+scikit-learn>=1.0   # for fetch_openml and utilities
+matplotlib>=3.0     # plotting training/validation curves
+pytest>=7.0         # unit testing
