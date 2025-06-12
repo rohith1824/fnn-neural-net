@@ -1,20 +1,9 @@
-# benchmark.py
+# imports
 import time
 import numpy as np
-from pathlib import Path
-from tabulate import tabulate
 from sklearn.datasets import fetch_openml
-
-
-
-# ---- local imports ----------------------------------------------------------
-from src.utils import (
-    generate_blobs, normalize_data, one_hot_encode,
-    train_val_test_split, softmax, cross_entropy_loss, softmax_ce_gradient
-)
-
-from src.nn import NeuralNetwork, train_two_layer, evaluate_two_layer
-from src.layers import Dense
+from src.utils import train_val_test_split
+from src.nn import NeuralNetwork
 
 SEED           = 0
 TRAIN_FRACTION = 0.80   # 80 % train, 10 % val, 10 % test
@@ -22,9 +11,7 @@ EPOCHS         = 50
 LR             = 0.1
 ARCH           = [784, 128, 64, 10] 
 
-# ----------------------------------------------------------------------------- 
-# 1) LOAD & PREP MNIST                                                         |
-# ----------------------------------------------------------------------------- 
+# Load data                                                         
 def load_data(name="mnist", flatten=True):
     """
     name: "mnist" or "fashion_mnist"
@@ -49,9 +36,7 @@ def load_data(name="mnist", flatten=True):
         X = X.reshape(-1, 28, 28)
     return X, y
 
-# ----------------------------------------------------------------------------- 
-# 2) TRAIN / EVAL                                                              |
-# ----------------------------------------------------------------------------- 
+# Train model
 def main(dataset="mnist"):
     np.random.seed(SEED)
 

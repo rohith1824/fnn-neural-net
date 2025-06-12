@@ -7,7 +7,7 @@ def generate_data(n_samples=100, n_features=2, n_classes=2, random_seed=None):
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    # Features: random normal
+    # random normal
     X = np.random.randn(n_samples, n_features)
 
     # Labels: integers 0..(n_classes-1), assigned uniformly at random

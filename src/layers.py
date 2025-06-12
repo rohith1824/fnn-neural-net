@@ -26,6 +26,10 @@ class Dense:
         self.dW = self.db = None
 
     def forward(self, x):
+        """
+        Compute z = x·W + b, apply activation ('relu', 'sigmoid', or 'linear'),
+        cache input/z/output, and return the activated output.
+        """
         self.input = x
         self.z = np.dot(x, self.W) + self.b
 
@@ -41,6 +45,9 @@ class Dense:
         return self.output
 
     def backward(self, dout):
+        """
+        Backpropagate through activation, compute gradients dW, db, and return dX.
+        """
         # Compute derivative through the activation
         if self.activation == 'relu':
             dz = dout * (self.z > 0).astype(float)

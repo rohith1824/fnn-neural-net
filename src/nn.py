@@ -30,19 +30,22 @@ class NeuralNetwork:
 
 
     def compute_loss(self, logits, y_true):
-        # 1) Softmax (numerically stable)
-        #    Shift by row-wise max to avoid overflow
+        """
+        Compute softmax cross-entropy loss and its gradient.
+        """
+        # Softmax numerically stable
+        # Shift by row-wise max to avoid overflow
         shifted = logits - np.max(logits, axis=1, keepdims=True)  # (N,10)
         exp_scores = np.exp(shifted)                               # (N,10)
         probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)  # (N,10)
 
-        # 2) Cross-entropy
+        # Cross-entropy
         N = logits.shape[0]
         # pick the probability assigned to the true class for each sample
         correct_logprobs = -np.log(probs[np.arange(N), y_true])
         loss = np.mean(correct_logprobs)
 
-        # 3) Gradient of loss w.r.t. logits:
+        # Gradient of loss w.r.t. logits:
         # For softmax + CE, dL/d( z_i ) = (p_i - 1_{i=y_true}) / N
         dlogits = probs.copy()                   # (N,10)
         dlogits[np.arange(N), y_true] -= 1        # subtract 1 at true‐class positions
@@ -89,10 +92,13 @@ class NeuralNetwork:
             patience: int = 5,
             min_delta: float = 1e-3,
         ):
+            """
+            Train the network with mini-batch SGD, optional validation, and early stopping
+            """
             n_samples = X.shape[0]
             best_val_loss = np.inf
             epochs_bad    = 0
-            # 👉 store best weights so we can roll back
+            # store best weights so we can roll back
             best_weights = [(layer.W.copy(), layer.b.copy()) for layer in self.layers]
 
             for epoch in range(1, epochs + 1):
@@ -108,7 +114,7 @@ class NeuralNetwork:
                     self.backward(dlog)
                     self.update_params(lr)
 
-                # ---- metrics ----------------------------------------------------
+                # Model metrics
                 logits_tr = self.forward(X)
                 train_acc = (np.argmax(logits_tr, axis=1) == y).mean()
 
@@ -124,7 +130,7 @@ class NeuralNetwork:
                             f"— val_loss {val_loss:.4f} "
                             f"— val_acc {val_acc:.3f}")
 
-                    # ---- EARLY-STOP CHECK --------------------------------------
+                    # Early callback check
                     if best_val_loss - val_loss > min_delta:
                         best_val_loss = val_loss
                         epochs_bad    = 0
