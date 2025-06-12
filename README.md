@@ -1,37 +1,125 @@
 # Neural Network From Scratch
 
 ## 📌 Description
-This project implements a **feedforward neural network from scratch** using only NumPy—**no PyTorch or TensorFlow**. The goal is to build every component manually (weight initialization, forward pass, backward pass, loss computation, and parameter updates) so you deeply understand the math and mechanics behind training a neural network. Along the way, you’ll write clean, modular code, include unit tests for core functions, and visualize training dynamics.
+A lightweight, from-scratch implementation of a feedforward neural network using only NumPy—no PyTorch, no TensorFlow. Every component (parameter initialization, forward pass, backward pass, loss, and optimization) is handwritten to demonstrate a deep understanding of the math and mechanics behind training neural networks. Clean, modular code is paired with unit tests and visualizations.
 
 ---
 
-## 🎯 Goals
+## 🚀 Features
 
-- [ ] **Weight & bias initialization**  
-  - Implement functions to initialize parameters for each layer (e.g., small random values, Xavier/He initialization).
-- [ ] **Activation functions**  
-  - Code Sigmoid, ReLU, and (optionally) Tanh, along with their derivatives.
-- [ ] **Forward pass (single layer)**  
-  - Compute `Z = W·X + b` and apply activation `A = ϕ(Z)`.
-- [ ] **Forward pass (multi-layer)**  
-  - Stack multiple linear+activation layers to compute final output `ŷ`.
-- [ ] **Loss functions**  
-  - Implement Mean Squared Error (MSE) and/or Cross-Entropy loss, with forward and backward computations.
-- [ ] **Backward pass (single layer)**  
-  - Derive and code gradients `dW`, `db`, and `dX` for a single linear+activation layer.
-- [ ] **Backward pass (full network)**  
-  - Chain derivatives through all layers to compute gradients w.r.t. every parameter.
-- [ ] **Gradient descent optimizer**  
-  - Implement parameter updates with a fixed learning rate (and, optionally, add momentum or learning rate decay).
-- [ ] **Training loop**  
-  - Set up mini-batch or full-batch looping over epochs, compute forward → loss → backward → update for N epochs.
-- [ ] **Performance monitoring & visualization**  
-  - Plot training/validation loss over epochs and track accuracy on a simple dataset (e.g., toy dataset or a small CSV).
-- [ ] **Evaluate on a real dataset**  
-  - Load a simple dataset (e.g., MNIST subset, Iris, or a synthetic problem), train your network, and report final accuracy.
-- [ ] **Unit tests**  
-  - Write tests for initialization, forward pass, backward pass, and loss functions to ensure gradients are correct (e.g., via numerical gradient check).
-- [ ] **Code modularity & documentation**  
-  - Organize code into modules (e.g., `layers/`, `activations/`, `losses/`, `utils/`), add docstrings, and keep functions single-purpose.
+- **Modular Layers**  
+  - `Dense` layer supporting ReLU, Sigmoid, and Linear activations  
+  - Built-in caching for inputs, pre-activations (Z), and outputs
+
+- **Flexible Architectures**  
+  - Construct any `[input,…,output]` topology via `NeuralNetwork([…])`
+
+- **Loss & Metrics**  
+  - Numerically-stable Softmax + Cross-Entropy  
+  - Training/validation accuracy tracking
+
+- **Optimizers & Callbacks**  
+  - Mini-batch SGD with fixed learning rate  
+  - Early stopping with patience and weight rollback
+
+- **Data Utilities**  
+  - Gaussian blobs and (Fashion-)MNIST loaders  
+  - Standardization, one-hot encoding, and train/val/test splits
+
+- **Visualization & Benchmarking**  
+  - Plot training/validation loss curves  
+  - MNIST benchmark script with timing and accuracy summary
+
+- **Test-Driven Development**  
+  - Shape checks, numerical gradient tests, end-to-end loss-decrease tests
 
 ---
+
+## 🧮 Math & Mechanics
+
+1. **Parameter Initialization**  
+   - **Xavier** (linear/sigmoid):  
+     $$W \sim \mathcal{N}\bigl(0,\,\tfrac1{\text{fan\_in}}\bigr)$$
+   - **He** (ReLU):  
+     $$W \sim \mathcal{N}\bigl(0,\,\tfrac2{\text{fan\_in}}\bigr)$$
+
+2. **Forward Pass**  
+   - **Linear**: $Z^{[l]} = A^{[l-1]} W^{[l]} + b^{[l]}$
+   - **Activations**:  
+     - ReLU: $A = \max(0, Z)$
+     - Sigmoid: $\sigma(Z)=\tfrac1{1+e^{-Z}}$
+
+3. **Softmax & Cross-Entropy**  
+   - Softmax: $p_i = \tfrac{e^{z_i - \max_j z_j}}{\sum_k e^{z_k - \max_j z_j}}$
+   - Loss: $L = -\tfrac1N\sum_{n=1}^N \log p_{n,y_n}$
+
+4. **Backward Pass**  
+   - Activation gradients (e.g. $\tfrac{d\text{ReLU}}{dZ}=1_{Z>0}$)
+   - Parameter gradients:  
+     $$dW^{[l]} = (A^{[l-1]})^T\,dZ^{[l]},\quad db^{[l]} = \sum_n dZ_n^{[l]}$$
+   - Propagate: $dA^{[l-1]} = dZ^{[l]} (W^{[l]})^T$
+
+5. **Optimization (SGD)**  
+   $$W \gets W - \eta\,dW,\quad b \gets b - \eta\,db$$
+
+---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/yourusername/neural-net-from-scratch.git
+cd neural-net-from-scratch
+python3 -m venv venv
+source venv/bin/activate      # macOS/Linux
+pip install -r requirements.txt
+```
+
+## 🎯 Quick Start
+
+1. **Toy data**
+
+```bash
+python benchmark.py
+```
+
+2. **MNIST training**
+
+```bash
+python main.py --dataset mnist
+```
+
+3. **Plot results** After training, check console summary or hook into `history` for custom plots.
+
+## 📂 Code Structure
+
+```
+├── src/
+│   ├── layers.py        # Dense layer implementation
+│   ├── nn.py            # NeuralNetwork class
+│   └── utils.py         # data loaders, preprocessing, loss, metrics
+├── tests/
+│   ├── test_layers.py   # shape & gradient checks
+│   └── test_nn.py       # end-to-end loss-decrease test
+├── benchmark.py         # two-layer training helper
+├── main.py              # MNIST/Fashion-MNIST pipeline
+└── requirements.txt
+```
+
+## 📈 Results
+
+* **Gaussian blobs**: 100% train accuracy in <100 epochs
+* **MNIST** (50 epochs, early stopping):
+   * ⏱ ~15s on CPU
+   * 🎯 Val/Test accuracy ≈ 94-97%
+
+## ✅ Testing
+
+```bash
+pytest -q
+```
+
+All tests should pass, verifying shapes, gradients, and training dynamics.
+
+## 📜 License
+
+MIT © Rohith Senthil Kumar
